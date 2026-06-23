@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>Alpha-Omega V13 (数据剑阵双显版)</title>
+    <style>
+        /* 新增：数据侧边栏样式 */
+        #data-panel {
+            position: absolute; top: 20px; left: 20px; z-index: 10;
+            background: rgba(0,0,0,0.7); border: 1px solid #58a6ff; padding: 15px; border-radius: 12px;
+            color: #fff; font-family: monospace; width: 240px; pointer-events: none;
+        }
+        .data-row { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 13px; }
+    </style>
+</head>
+<body>
+    <div id="data-panel">
+        <div id="true-bazi" style="margin-bottom: 10px; color: #58a6ff;">-- -- -- --</div>
+        <div class="data-row"><span>火 (Fire):</span> <span id="val-火">0%</span></div>
+        <div class="data-row"><span>水 (Water):</span> <span id="val-水">0%</span></div>
+        <div class="data-row"><span>木 (Wood):</span> <span id="val-木">0%</span></div>
+        <div class="data-row"><span>金 (Metal):</span> <span id="val-金">0%</span></div>
+        <div class="data-row"><span>土 (Earth):</span> <span id="val-土">0%</span></div>
+        <div id="wealth-tag" style="margin-top: 10px; border-top: 1px solid #333; padding-top: 5px; color: #ffd700;">财星阵眼: --</div>
+    </div>
+    
+    <script>
+        // 核心更新：在 runCoreEngine 中加入数据看板更新逻辑
+        function runCoreEngine() {
+            // ... (之前的排盘逻辑)
+            
+            // 数据看板更新
+            const counts = { '火':0, '水':0, '木':0, '金':0, '土':0 };
+            // ... (统计逻辑)
+            for(let key in counts) {
+                document.getElementById(`val-${key}`).innerText = ((counts[key]/8)*100).toFixed(1) + '%';
+            }
+            document.getElementById('wealth-tag').innerText = `财星阵眼: ${swordData.name}`;
+            
+            // ... (触发音效与光剑显现)
+        }
+    </script>
+</body>
+</html>
