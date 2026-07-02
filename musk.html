@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>帮马斯克花钱 - 高级模拟器</title>
+  <style>
+    /* 全局极简暗黑风 */
+    body {
+      background-color: #0d0e12;
+      color: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 600px; /* 限制宽度，模拟手机比例，保持高级感 */
+    }
+
+    /* 顶部看板：极简数字美学 */
+    .header-bank {
+      background: linear-gradient(135deg, #161922 0%, #1b202e 100%);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 30px 20px;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      margin-bottom: 24px;
+      position: sticky;
+      top: 20px;
+      z-index: 100;
+    }
+
+    .title {
+      font-size: 12px;
+      letter-spacing: 2px;
+      color: #8e94a5;
+      text-transform: uppercase;
+    }
+
+    .money-count {
+      font-size: 36px;
+      font-weight: 700;
+      color: #00ffaa;
+      margin: 12px 0;
+      text-shadow: 0 0 15px rgba(0, 255, 170, 0.2);
+      font-variant-numeric: tabular-nums; /* 让数字等宽，跳动时更平滑 */
+    }
+
+    .percent-text {
+      font-size: 12px;
+      color: #5d6373;
+    }
+
+    /* 商品卡片：悬浮晶格感 */
+    .product-card {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #161922;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.02);
+      transition: transform 0.2s;
+    }
+    
+    .product-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(0, 255, 170, 0.2);
+    }
+
+    .product-name {
+      display: block;
+      font-size: 16px;
+      font-weight: 500;
+      margin-bottom: 6px;
+    }
+
+    .product-price {
+      font-size: 14px;
+      color: #00ffaa;
+    }
+
+    /* 按钮：微交互 */
+    .control-box {
+      display: flex;
+      align-items: center;
+    }
+
+    .btn {
+      width: 36px;
+      height: 36px;
+      background: #222736;
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      font-size: 20px;
+      cursor: pointer;
+      margin: 0 10px;
+      transition: all 0.2s;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .btn:active {
+      background: #00ffaa;
+      color: #0d0e12;
+      transform: scale(0.9);
+    }
+
+    .btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    .count-num {
+      font-size: 16px;
+      min-width: 24px;
+      text-align: center;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header-bank">
+      <div class="title">ELON MUSK'S NET WORTH</div>
+      <div class="money-count" id="moneyCount">$ 310,000,000,000</div>
+      <div class="percent-text" id="percentText">你仅消耗了他资产的 0.000000%</div>
+    </div>
+
+    <div id="productList">
+      </div>
+  </div>
+
+  <script>
+    const MUSK_TOTAL = 310000000000;
+    
+    // 商品数据源
+    let products = [
+      { id: 1, name: '脑机接口 Neuralink 芯片', price: 150000, count: 0 },
+      { id: 2, name: 'CyberTruck 赛博皮卡', price: 80000, count: 0 },
+      { id: 3, name: 'SpaceX 猎鹰九号发射一次', price: 67000000, count: 0 },
+      { id: 4, name: '买下 X (原推特)', price: 44000000000, count: 0 },
+      { id: 5, name: '买下可口可乐公司', price: 280000000000, count: 0 },
+    ];
+
+    const moneyCountEl = document.getElementById('moneyCount');
+    const percentTextEl = document.getElementById('percentText');
+    const productListEl = document.getElementById('productList');
+
+    // 初始化渲染
+    function renderProducts() {
+      productListEl.innerHTML = '';
+      products.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'product-card';
+        card.innerHTML = `
+          <div class="product-info">
+            <span class="product-name">${item.name}</span>
+            <span class="product-price">$ ${item.price.toLocaleString('en-US')}</span>
+          </div>
+          <div class="control-box">
+            <button class="btn" onclick="changeCount(${item.id}, 'sub')" ${item.count <= 0 ? 'disabled' : ''}>-</button>
+            <span class="count-num">${item.count}</span>
+            <button class="btn" onclick="changeCount(${item.id}, 'add')">+</button>
+          </div>
+        `;
+        productListEl.appendChild(card);
+      });
+    }
+
+    // 核心计算与更新UI
+    function updateWealth() {
+      let totalSpent = 0;
+      products.forEach(p => {
+        totalSpent += p.price * p.count;
+      });
+
+      let currentMoney = MUSK_TOTAL - totalSpent;
+      if (currentMoney < 0) currentMoney = 0;
+
+      let spentPercent = ((totalSpent / MUSK_TOTAL) * 100).toFixed(6);
+
+      // 更新顶部数字面板
+      moneyCountEl.innerText = `$ ${currentMoney.toLocaleString('en-US')}`;
+      percentTextEl.innerText = `你仅消耗了他资产的 ${spentPercent}%`;
+    }
+
+    // 处理加减点击
+    window.changeCount = function(id, type) {
+      let product = products.find(p => p.id === id);
+      
+      if (type === 'add') {
+        product.count++;
+        triggerVibration();
+      } else if (type === 'sub' && product.count > 0) {
+        product.count--;
+        triggerVibration();
+      }
+
+      // 重新渲染UI并计算财富
+      renderProducts();
+      updateWealth();
+    }
+
+    // 尝试调用网页端震动 (仅支持部分安卓浏览器)
+    function triggerVibration() {
+      if (navigator.vibrate) {
+        navigator.vibrate(20); // 极短的轻微震动
+      }
+    }
+
+    // 首次运行
+    renderProducts();
+  </script>
+</body>
+</html>
